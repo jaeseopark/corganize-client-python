@@ -2,6 +2,7 @@ import json
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
+from typing import List
 
 import requests
 
@@ -27,13 +28,11 @@ class CorganizeClient:
         r = requests.patch(url, json=file, headers=self._headers)
         r.raise_for_status()
 
-    def create(self, file):
-        url = self._compose_url("/files")
-        r = requests.post(url, json=file, headers=self._headers)
-        if r.status_code == 400 and r.json().get("message") == "Primary Key already exists":
-            fileid = file["fileid"]
-            raise RuntimeError(f"File already exists fileid={fileid}")
+    def create(self, files: List[dict]):
+        url = self._compose_url("/files/bulk")
+        r = requests.post(url, json=files, headers=self._headers)
         r.raise_for_status()
+        return r.json()
 
     def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000):
         return_files = list()
