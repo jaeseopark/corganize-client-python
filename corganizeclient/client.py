@@ -72,9 +72,8 @@ class CorganizeClient:
         return return_files
 
     def get_incomplete_files(self, limit):
-        # Get the list of incomplete files whose 'ispublic' field does not exist or is True.
-        return [f for f in self._get_paginated_files(url, limit=limit) if f.get("ispublic", True)]
         url = urljoin(self.host, "/files/incomplete")
+        return self._get_paginated_files(url, limit=limit)
 
     def get_active_files(self, limit):
         url = urljoin(self.host, "/files/active")
