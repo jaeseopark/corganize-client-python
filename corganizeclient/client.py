@@ -1,8 +1,10 @@
 import json
 import logging
+import urllib
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import List
+from urllib.parse import urlparse, urljoin
 
 import requests
 
@@ -16,20 +18,15 @@ class CorganizeClient:
 
     @property
     def _headers(self):
-        return {
-            "apikey": self.apikey
-        }
-
-    def _compose_url(self, resource):
-        return "/".join([s.strip("/") for s in (self.host, resource)])
+        return {"apikey": self.apikey}
 
     def update(self, file):
-        url = self._compose_url("/files")
+        url = urljoin(self.host, "/files")
         r = requests.patch(url, json=file, headers=self._headers)
         r.raise_for_status()
 
     def create(self, files: List[dict]):
-        url = self._compose_url("/files/bulk")
+        url = urljoin(self.host, "/files/bulk")
         r = requests.post(url, json=files, headers=self._headers)
         r.raise_for_status()
         return r.json()
@@ -76,14 +73,14 @@ class CorganizeClient:
 
     def get_incomplete_files(self, limit):
         # Get the list of incomplete files whose 'ispublic' field does not exist or is True.
-        url = self._compose_url("/files/incomplete")
         return [f for f in self._get_paginated_files(url, limit=limit) if f.get("ispublic", True)]
+        url = urljoin(self.host, "/files/incomplete")
 
     def get_active_files(self, limit):
-        url = self._compose_url("/files/active")
+        url = urljoin(self.host, "/files/active")
         return self._get_paginated_files(url, limit=limit)
 
     def delete(self, fileid: str):
-        url = self._compose_url("/files")
         r = requests.delete(url, data=json.dumps({"fileid": fileid}), headers=self._headers)
+        url = urljoin(self.host, "/files")
         r.raise_for_status()
