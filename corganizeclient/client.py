@@ -11,15 +11,15 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class CorganizeClient:
-    base_url: str
+    host: str
     apikey: str
 
     @property
-    def _headers(self):
+    def _default_headers(self):
         return {"apikey": self.apikey}
 
     def _compose_url(self, resource):
-        return "/".join([x.strip("/") for x in (self.base_url, resource)])
+        return "/".join([s.strip("/") for s in (self.host, resource)])
 
     def get_recent_files(self, limit):
         url = self._compose_url("/files")
@@ -33,39 +33,39 @@ class CorganizeClient:
         url = self._compose_url("/files/incomplete")
         return self._get_paginated_files(url, limit=limit)
 
-    def create(self, files: List[dict]):
+    def create_files(self, files: List[dict]):
         assert isinstance(files, list)
 
         url = self._compose_url("/files/bulk")
-        r = requests.post(url, json=files, headers=self._headers)
+        r = requests.post(url, json=files, headers=self._default_headers)
 
         if not r.ok:
             raise RuntimeError(r.text)
 
         return r.json()
 
-    def update(self, file):
+    def update_file(self, file):
         assert isinstance(file, dict)
 
         url = self._compose_url("/files")
-        r = requests.patch(url, json=file, headers=self._headers)
+        r = requests.patch(url, json=file, headers=self._default_headers)
 
         if not r.ok:
             raise RuntimeError(r.text)
 
-    def delete(self, fileid: str):
+    def delete_file(self, fileid: str):
         assert isinstance(fileid, str)
 
         url = self._compose_url("/files")
-        r = requests.delete(url, data={"fileid": fileid}, headers=self._headers)
+        r = requests.delete(url, json={"fileid": fileid}, headers=self._default_headers)
         r.raise_for_status()
 
     def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000):
         return_files = list()
 
         if not headers:
-            LOGGER.debug("headers not provided. Using the default dictionary...")
-            headers = self._headers
+            LOGGER.debug("headers not provided. Using the default headers...")
+            headers = self._default_headers
 
         headers_deepcopy = deepcopy(headers)
 
