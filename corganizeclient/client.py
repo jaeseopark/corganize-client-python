@@ -1,10 +1,8 @@
-import json
 import logging
-import urllib
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import List
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin
 
 import requests
 
@@ -13,23 +11,54 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class CorganizeClient:
-    host: str
+    base_url: str
     apikey: str
 
     @property
     def _headers(self):
         return {"apikey": self.apikey}
 
-    def update(self, file):
-        url = urljoin(self.host, "/files")
-        r = requests.patch(url, json=file, headers=self._headers)
-        r.raise_for_status()
+    def _compose_url(self, resource):
+        return "/".join([x.strip("/") for x in (self.base_url, resource)])
+
+    def get_recent_files(self, limit):
+        url = self._compose_url("/files")
+        return self._get_paginated_files(url, limit=limit)
+
+    def get_active_files(self, limit):
+        url = self._compose_url("/files/active")
+        return self._get_paginated_files(url, limit=limit)
+
+    def get_incomplete_files(self, limit):
+        url = self._compose_url("/files/incomplete")
+        return self._get_paginated_files(url, limit=limit)
 
     def create(self, files: List[dict]):
-        url = urljoin(self.host, "/files/bulk")
+        assert isinstance(files, list)
+
+        url = self._compose_url("/files/bulk")
         r = requests.post(url, json=files, headers=self._headers)
-        r.raise_for_status()
+
+        if not r.ok:
+            raise RuntimeError(r.text)
+
         return r.json()
+
+    def update(self, file):
+        assert isinstance(file, dict)
+
+        url = self._compose_url("/files")
+        r = requests.patch(url, json=file, headers=self._headers)
+
+        if not r.ok:
+            raise RuntimeError(r.text)
+
+    def delete(self, fileid: str):
+        assert isinstance(fileid, str)
+
+        url = self._compose_url("/files")
+        r = requests.delete(url, data={"fileid": fileid}, headers=self._headers)
+        r.raise_for_status()
 
     def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000):
         return_files = list()
@@ -70,16 +99,3 @@ class CorganizeClient:
             return return_files[:limit]
 
         return return_files
-
-    def get_incomplete_files(self, limit):
-        url = urljoin(self.host, "/files/incomplete")
-        return self._get_paginated_files(url, limit=limit)
-
-    def get_active_files(self, limit):
-        url = urljoin(self.host, "/files/active")
-        return self._get_paginated_files(url, limit=limit)
-
-    def delete(self, fileid: str):
-        url = urljoin(self.host, "/files")
-        r = requests.delete(url, data={"fileid": fileid}, headers=self._headers)
-        r.raise_for_status()
