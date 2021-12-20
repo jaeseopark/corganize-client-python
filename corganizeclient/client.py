@@ -81,6 +81,6 @@ class CorganizeClient:
         return self._get_paginated_files(url, limit=limit)
 
     def delete(self, fileid: str):
-        r = requests.delete(url, data=json.dumps({"fileid": fileid}), headers=self._headers)
         url = urljoin(self.host, "/files")
+        r = requests.delete(url, data={"fileid": fileid}, headers=self._headers)
         r.raise_for_status()
