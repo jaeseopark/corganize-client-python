@@ -2,7 +2,6 @@ import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import List
-from urllib.parse import urljoin
 
 import requests
 
