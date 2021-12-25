@@ -64,6 +64,12 @@ class CorganizeClient:
         r = requests.delete(url, json={"fileid": fileid}, headers=self._default_headers)
         r.raise_for_status()
 
+    def get_user_config(self):
+        url = self._compose_url("/config")
+        r = requests.get(url, headers=self._default_headers)
+        r.raise_for_status()
+        return r.json()
+
     def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000):
         return_files = list()
 
