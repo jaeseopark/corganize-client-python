@@ -57,11 +57,11 @@ class CorganizeClient:
         if not r.ok:
             raise RuntimeError(r.text)
 
-    def delete_file(self, fileid: str):
-        assert isinstance(fileid, str)
+    def delete_files(self, fileids: List[str]):
+        assert isinstance(fileids, list)
 
         url = self._compose_url("/files")
-        r = requests.delete(url, json={"fileid": fileid}, headers=self._default_headers)
+        r = requests.delete(url, json={"fileids": fileids}, headers=self._default_headers)
         r.raise_for_status()
 
     def get_user_config(self):
