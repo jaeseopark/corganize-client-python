@@ -28,9 +28,10 @@ class CorganizeClient:
         url = self._compose_url("/files/active")
         return self._get_paginated_files(url, limit=limit)
 
-    def get_stale_files(self, limit):
-        url = self._compose_url("/files/stale")
-        return self._get_paginated_files(url, limit=limit)
+    def get_least_recent_active_files(self, limit):
+        url = self._compose_url("/files/active")
+        headers = {**self._default_headers, "order": "asc"}
+        return self._get_paginated_files(url, headers=headers, limit=limit)
 
     def get_stale_files(self, limit):
         url = self._compose_url("/files/stale")
