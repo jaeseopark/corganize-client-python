@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="corganizeclient",
-    version="0.0.9",
+    version="0.0.10",
     author="Jaeseo Park",
     description="A Python client to interact with corganize server",
     long_description=long_description,

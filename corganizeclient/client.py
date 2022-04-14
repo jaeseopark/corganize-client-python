@@ -20,9 +20,14 @@ class CorganizeClient:
     def _compose_url(self, resource):
         return "/".join([s.strip("/") for s in (self.host, resource)])
 
-    def get_recent_files(self, limit):
+    def get_recently_modified_files(self, limit):
         url = self._compose_url("/files")
         return self._get_paginated_files(url, limit=limit)
+
+    def get_least_recently_modified_files(self, limit):
+        url = self._compose_url("/files")
+        headers = {**self._default_headers, "order": "asc"}
+        return self._get_paginated_files(url, headers=headers, limit=limit)
 
     def get_active_files(self, limit):
         url = self._compose_url("/files/active")
