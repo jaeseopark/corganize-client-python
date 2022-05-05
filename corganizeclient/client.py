@@ -1,6 +1,7 @@
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
+from time import sleep
 from typing import List
 
 import requests
@@ -20,31 +21,31 @@ class CorganizeClient:
     def _compose_url(self, resource):
         return "/".join([s.strip("/") for s in (self.host, resource)])
 
-    def get_recently_modified_files(self, limit):
+    def get_recently_modified_files(self, **kwargs):
         url = self._compose_url("/files")
-        return self._get_paginated_files(url, limit=limit)
+        return self._get_paginated_files(url, **kwargs)
 
-    def get_least_recently_modified_files(self, limit):
+    def get_least_recently_modified_files(self, **kwargs):
         url = self._compose_url("/files")
         headers = {**self._default_headers, "order": "asc"}
-        return self._get_paginated_files(url, headers=headers, limit=limit)
+        return self._get_paginated_files(url, headers=headers, **kwargs)
 
-    def get_active_files(self, limit):
+    def get_active_files(self, **kwargs):
         url = self._compose_url("/files/active")
-        return self._get_paginated_files(url, limit=limit)
+        return self._get_paginated_files(url, **kwargs)
 
-    def get_least_recent_active_files(self, limit):
+    def get_least_recent_active_files(self, **kwargs):
         url = self._compose_url("/files/active")
         headers = {**self._default_headers, "order": "asc"}
-        return self._get_paginated_files(url, headers=headers, limit=limit)
+        return self._get_paginated_files(url, headers=headers, **kwargs)
 
-    def get_stale_files(self, limit):
+    def get_stale_files(self, **kwargs):
         url = self._compose_url("/files/stale")
-        return self._get_paginated_files(url, limit=limit)
+        return self._get_paginated_files(url, **kwargs)
 
-    def get_incomplete_files(self, limit):
+    def get_incomplete_files(self, **kwargs):
         url = self._compose_url("/files/incomplete")
-        return self._get_paginated_files(url, limit=limit)
+        return self._get_paginated_files(url, **kwargs)
 
     def create_files(self, files: List[dict]):
         assert isinstance(files, list)
@@ -79,7 +80,7 @@ class CorganizeClient:
         r.raise_for_status()
         return r.json()
 
-    def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000):
+    def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000, interval: int = 0):
         return_files = list()
 
         if not headers:
@@ -110,6 +111,7 @@ class CorganizeClient:
             })
 
             LOGGER.info("next_token found")
+            sleep(interval)
 
         LOGGER.info("End of pagination")
 
