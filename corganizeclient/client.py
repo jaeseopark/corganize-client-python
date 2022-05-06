@@ -6,7 +6,8 @@ from typing import List
 
 import requests
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("corganizeclient")
+logging.basicConfig()
 
 
 @dataclass(frozen=True)
@@ -47,16 +48,34 @@ class CorganizeClient:
         url = self._compose_url("/files/incomplete")
         return self._get_paginated_files(url, **kwargs)
 
-    def create_files(self, files: List[dict]):
-        assert isinstance(files, list)
+    def create_files(self, files: List[dict], chunk_size: int = 50, interval: int = 15):
+        url = self._compose_url("/files")
+        remaining_files = files
+        result = dict(
+            created=[],
+            skipped=[],
+            failed=[]
+        )
 
-        url = self._compose_url("/files/bulk")
-        r = requests.post(url, json=files, headers=self._default_headers)
+        while True:
+            chunk = remaining_files[:chunk_size]
+            r = requests.post(url, json=chunk, headers=self._default_headers)
 
-        if not r.ok:
-            raise RuntimeError(r.text)
+            if not r.ok:
+                result["failed"] += [f["fileid"] for f in chunk]
 
-        return r.json()
+            chunk_result = r.json()
+            result["created"] += chunk_result["created"]
+            result["skipped"] += chunk_result["skipped"]
+
+            remaining_files = remaining_files[chunk_size:]
+            if len(remaining_files) == 0:
+                break
+
+            LOGGER.debug(f"Sleeping for {interval=} seconds; {len(remaining_files)=}")
+            sleep(interval)
+
+        return result
 
     def update_file(self, file):
         assert isinstance(file, dict)
