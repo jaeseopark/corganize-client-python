@@ -21,6 +21,14 @@ class CorganizeClient:
     def _compose_url(self, resource):
         return "/".join([s.strip("/") for s in (self.host, resource)])
 
+    def get_file(self, fileid) -> dict:
+        url = self._compose_url(f"/files/{fileid}")
+        r = requests.get(url, headers=self._default_headers)
+        if r.status_code == 404:
+            return None
+        r.raise_for_status()
+        return r.json()
+
     def get_recently_modified_files(self, **kwargs):
         url = self._compose_url("/files")
         return self._get_paginated_files(url, **kwargs)
