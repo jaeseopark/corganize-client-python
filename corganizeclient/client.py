@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from time import sleep
-from typing import List
+from typing import List, Callable
 
 import requests
 
@@ -88,7 +88,8 @@ class CorganizeClient:
         r.raise_for_status()
         return r.json()
 
-    def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000, interval: int = 0):
+    def _get_paginated_files(self, url: str, headers: dict = None, limit: int = 1000, interval: int = 0,
+                             custom_filter: Callable[[List[dict]], List[dict]] = None):
         return_files = list()
 
         if not headers:
@@ -106,9 +107,12 @@ class CorganizeClient:
             files = response_json.get("files")
             metadata = response_json.get("metadata")
 
+            if custom_filter:
+                files = custom_filter(files)
+
             return_files += files
 
-            LOGGER.info(f"len(files)={len(files)} len(return_files)={len(return_files)}")
+            LOGGER.info(f"{len(files)=} {len(return_files)=}")
 
             next_token = metadata.get("nexttoken")
             if not next_token or len(return_files) >= limit:
