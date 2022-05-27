@@ -2,9 +2,10 @@ import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from time import sleep
-from typing import List, Callable
+from typing import List, Callable, Optional
 
 import requests
+from pydash import head
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,16 +19,17 @@ class CorganizeClient:
     def _default_headers(self):
         return {"apikey": self.apikey}
 
-    def _compose_url(self, resource):
+    def _compose_url(self, resource: str):
         return "/".join([s.strip("/") for s in (self.host, resource)])
 
-    def get_file(self, fileid) -> dict:
-        url = self._compose_url(f"/files/{fileid}")
-        r = requests.get(url, headers=self._default_headers)
-        if r.status_code == 404:
-            return None
+    def get_file(self, fileid: str) -> Optional[dict]:
+        return head(self.get_files(fileid))
+
+    def get_files(self, *fileids: str) -> List[dict]:
+        url = self._compose_url("/files")
+        r = requests.get(url, headers=self._default_headers, params={"fileids": "|".join(fileids)})
         r.raise_for_status()
-        return r.json()
+        return r.json().get("files")
 
     def get_recently_modified_files(self, **kwargs):
         url = self._compose_url("/files")
