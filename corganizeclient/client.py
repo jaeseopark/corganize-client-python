@@ -60,7 +60,7 @@ class CorganizeClient:
     def create_files(self, files: List[dict]):
         assert isinstance(files, list)
 
-        url = self._compose_url("/files/bulk")
+        url = self._compose_url("/files")
         r = requests.post(url, json=files, headers=self._default_headers)
 
         if not r.ok:
