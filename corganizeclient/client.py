@@ -134,3 +134,18 @@ class CorganizeClient:
             return return_files[:limit]
 
         return return_files
+
+    def get_unique_tags(self) -> List[str]:
+        url = self._compose_url("tags")
+        r = requests.get(url, headers=self._default_headers)
+        r.raise_for_status()
+        return r.json()["tags"]
+
+    def rename_tags(self, tags: List[str], new_tag: str):
+        url = self._compose_url("tags/rename")
+        payload = dict(
+            oldnames=tags,
+            newname=new_tag
+        )
+        r = requests.post(url, headers=self._default_headers, json=payload)
+        r.raise_for_status()
